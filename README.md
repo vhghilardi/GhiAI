@@ -5,6 +5,17 @@ Pacote **GhiAI** com componentes que integram IA (OpenAI) ao Delphi.
 **Autor:** Victor Henrique Ghilardi  
 **Site:** [ghiweb.com.br](https://ghiweb.com.br)
 
+## Componentes
+
+- **TGhiAiSQLBuilder** — Transforma SQL básico em SQL complexo via IA
+- **TGhiAiSQLExplainer** — Explica como cada coluna de uma query foi obtida (para suporte/documentação)
+- **TGhiAIDataJud** — Consulta processos no DataJud com resumo via IA
+- **TGhiAiAnaliser** — Análise de dados via IA
+- **TGhiAiPredictive** — Análise preditiva via IA
+- **TGhiAiChart** — Gráfico a partir de TFDQuery com análise via IA
+
+---
+
 ## TGhiAiSQLBuilder
 
 Componente que usa a API OpenAI para transformar um SQL básico em um SQL complexo conforme sua instrução.
@@ -307,6 +318,70 @@ end;
 O botão "Analisar com IA" no canto superior direito abre um diálogo para o prompt. Ao enviar, os dados do gráfico são enviados para a OpenAI e a análise é exibida em uma nova janela.
 
 **Seleção de colunas:** No Object Inspector, EixoX e EixoY exibem dropdown com as colunas da Query (quando a Query está aberta/ativa). Em runtime, use `ConfigurarEixos` para exibir um diálogo com combos, ou `GetColunasDisponiveis` para obter a lista e popular seus próprios combos.
+
+---
+
+## TGhiAiSQLExplainer
+
+Componente para **explicar como cada coluna** de uma query SQL foi obtida. Resolve o problema de clientes acionando suporte perguntando "como o sistema chegou no valor desta coluna?" — a IA analisa o SQL e retorna uma explicação detalhada de cada coluna do resultado.
+
+### Propriedades
+
+| Propriedade | Descrição |
+|-------------|-----------|
+| Query | TFDQuery com o SQL a ser explicado (obtém de Query.SQL.Text) |
+| Connection | TFDConnection opcional — fornece schema das tabelas para melhor contexto |
+| ApiUrl | URL da API OpenAI |
+| ApiKey | Chave da OpenAI |
+| Model | Modelo (ex: gpt-4o-mini) |
+| Timeout | Timeout em ms (padrão: 60000) |
+| DatabaseType | Banco: dbSQLServer, dbMySQL, dbPostgreSQL, dbFirebird |
+
+### Uso
+
+```pascal
+var
+  Explainer: TGhiAiSQLExplainer;
+  Explicacao: string;
+begin
+  Explainer := TGhiAiSQLExplainer.Create(nil);
+  try
+    Explainer.Query := FDQuery1;  // Query com o SQL
+    Explainer.Connection := FDConnection1;  // Opcional: schema para contexto
+    Explainer.ApiUrl := 'https://api.openai.com/v1/chat/completions';
+    Explainer.ApiKey := 'sk-proj-...';
+    Explainer.DatabaseType := dbFirebird;
+
+    Explicacao := Explainer.ExplainColumns;
+
+    if Explicacao <> '' then
+      ShowMessage(Explicacao)  // ou Memo1.Text := Explicacao
+    else
+      ShowMessage('Erro: ' + Explainer.LastError);
+  finally
+    Explainer.Free;
+  end;
+end;
+```
+
+### Uso sem vincular Query (SQL direto)
+
+```pascal
+Explicacao := Explainer.ExplainSQL('SELECT c.nome, SUM(p.valor) AS total FROM clientes c JOIN pedidos p ON p.id_cliente = c.id GROUP BY c.nome');
+```
+
+### Métodos
+
+- **ExplainColumns: string** — Usa a Query vinculada, retorna explicação de cada coluna
+- **ExplainSQL(ASQL: string): string** — Explica um SQL passado diretamente (sem vincular Query)
+
+### Exemplo de saída
+
+Para um SQL como `SELECT mes, SUM(valor) AS total FROM vendas GROUP BY mes`, a IA pode retornar algo como:
+
+> **mes**: Valor obtido diretamente da coluna "mes" da tabela vendas. Representa o mês de cada venda.
+>
+> **total**: Soma de todos os valores da coluna "valor" da tabela vendas, agrupados por mês. É um valor calculado que representa o total de vendas em cada mês.
 
 ---
 

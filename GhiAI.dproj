@@ -136,6 +136,7 @@
         <DCCReference Include="FireDAC.dcp"/>
         <DCCReference Include="tee.dcp"/>
         <DCCReference Include="GhiAiSQLBuilder.pas"/>
+        <DCCReference Include="GhiAiSQLExplainer.pas"/>
         <DCCReference Include="GhiAIDataJud.pas"/>
         <DCCReference Include="GhiAiAnaliser.pas"/>
         <DCCReference Include="GhiAiPredictive.pas"/>
